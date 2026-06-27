@@ -1,17 +1,17 @@
 # FinAPI — Financial Sentiment Analysis Engine
 
-> **Python · Flask · FinBERT · SQLite · Hugging Face Transformers**
+> **Python · Flask · FinBERT · SQLite · Streamlit · Hugging Face Transformers**
 
 A production-ready REST API that fetches real-time stock prices and financial news,
-stores them in a SQLite database, and enriches them with AI-powered sentiment analysis
-using FinBERT — a Transformer model fine-tuned on 4.9 billion financial tokens.
+stores them in a SQLite database, enriches them with AI-powered sentiment analysis
+using FinBERT, and displays everything in an interactive Streamlit dashboard.
 
 ---
 
 ## Author
 
 **Rihem Dardouri**
-Master en Économie et Finance Quantitative
+Master en Économie et Finance Quantitatives
 École Polytechnique de Tunisie
 
 ---
@@ -23,6 +23,7 @@ Master en Économie et Finance Quantitative
 | Lab 1 | REST API — Real-time stock prices | Flask · yfinance | ✅ Done |
 | Lab 2 | ETL Pipeline — Data storage | SQLAlchemy · SQLite | ✅ Done |
 | Lab 3 | NLP — Financial sentiment analysis | FinBERT · Transformers | ✅ Done |
+| Lab 4 | Dashboard — Interactive UI | Streamlit · Plotly | ✅ Done |
 
 ---
 
@@ -39,11 +40,32 @@ pip install -e .
 
 ## Quick Start
 
+1 — Ingest prices and news
 python scripts/run_etl.py AAPL MSFT GOOGL
+
+2 — Enrich news with FinBERT sentiment
 python scripts/enrich_sentiment.py
+
+3 — Launch the API server
 python -m finapi.app
 
 Server runs at http://localhost:5000
+
+---
+
+## Launch the Dashboard (Lab 4)
+
+The Streamlit dashboard consumes the Flask API — launch both :
+
+Terminal 1 — API
+python -m finapi.app
+
+Terminal 2 — Dashboard
+streamlit run dashboard/app.py
+
+Then open http://localhost:8501
+
+![dashboard](docs/screenshots/dashboard.png)
 
 ---
 
@@ -63,6 +85,7 @@ Server runs at http://localhost:5000
 |--------|----------|-------------|
 | GET | /db/prices/<ticker> | Stored prices from SQLite |
 | GET | /db/news/<ticker> | Stored news from SQLite |
+| GET | /db/stats | Global database statistics |
 
 ### Lab 3 — FinBERT Sentiment Analysis
 
@@ -74,27 +97,35 @@ Server runs at http://localhost:5000
 
 ---
 
-##  Usage Examples
+## Usage Examples
 
+Health check
 curl http://localhost:5000/health
 
+Latest price AAPL
 curl http://localhost:5000/price/AAPL
 
+Price history 5 days MSFT
 curl "http://localhost:5000/history/MSFT?days=5"
 
+Stored prices
 curl http://localhost:5000/db/prices/AAPL
 
+Stored news
 curl http://localhost:5000/db/news/AAPL
 
+Sentiment analysis single text
 curl -X POST http://localhost:5000/sentiment -H "Content-Type: application/json" -d "{\"text\": \"Apple stock soared after earnings beat expectations.\"}"
 
+Sentiment analysis batch
 curl -X POST http://localhost:5000/sentiment/batch -H "Content-Type: application/json" -d "{\"texts\": [\"Apple stock soared after blockbuster earnings\", \"Tesla missed estimates, shares plunge\", \"The Fed kept interest rates unchanged\"]}"
 
+Sentiment summary AAPL
 curl http://localhost:5000/db/sentiment-summary/AAPL
 
 ---
 
-##  Database Migration
+## Database Migration
 
 python -c "from finapi.db import init_db; init_db()"
 python scripts/run_etl.py AAPL MSFT GOOGL
@@ -102,7 +133,7 @@ python scripts/enrich_sentiment.py
 
 ---
 
-##  Project Structure
+## Project Structure
 
 finapi-lab1/
 │
@@ -118,9 +149,19 @@ finapi-lab1/
 │       ├── prices_etl.py
 │       └── news_etl.py
 │
+├── dashboard/
+│   ├── __init__.py
+│   ├── app.py
+│   ├── api_client.py
+│   └── charts.py
+│
 ├── scripts/
 │   ├── run_etl.py
 │   └── enrich_sentiment.py
+│
+├── docs/
+│   └── screenshots/
+│       └── dashboard.png
 │
 ├── data/
 │   └── finapi.db
@@ -132,14 +173,11 @@ finapi-lab1/
 
 ---
 
-## About FinBERT
+##  About FinBERT
 
 FinBERT is a BERT model fine-tuned on financial corpora (analyst reports, Reuters, Bloomberg).
 It classifies text into positive, neutral, or negative sentiment with high accuracy
 on financial jargon such as "beat estimates", "guidance raised", or "missed targets".
 
-Model: ProsusAI/finbert on Hugging Face
-
 ---
 
-Document pédagogique — ITBS · SMARTLab ISG Tunis

@@ -12,6 +12,7 @@ from finapi.sentiment import analyze, analyze_batch
 
 log = logging.getLogger(__name__)
 
+
 def create_app() -> Flask:
     app = Flask(__name__)
     init_db()
@@ -103,6 +104,8 @@ def create_app() -> Flask:
                     "title": r.title,
                     "publisher": r.publisher,
                     "url": r.url,
+                    "sentiment_label": r.sentiment_label,
+                    "sentiment_score": r.sentiment_score,
                 }
                 for r in rows
             ],
@@ -156,6 +159,7 @@ def create_app() -> Flask:
                 for r in results
             ],
         })
+
     @app.get("/db/sentiment-summary/<ticker>")
     def sentiment_summary(ticker: str):
         """Resume des sentiments stockes pour un ticker."""
@@ -175,8 +179,28 @@ def create_app() -> Flask:
             "ticker": ticker.upper(),
             "distribution": {label: count for label, count in rows},
         })
+
+    @app.get("/db/stats")
+    def db_stats():
+        """Statistiques globales de la base."""
+        with SessionLocal() as session:
+            prices_count = session.query(PriceRecord).count()
+            news_count = session.query(NewsItem).count()
+            news_enriched = session.query(NewsItem).filter(
+                NewsItem.sentiment_label.isnot(None)
+            ).count()
+            tickers = [
+                r[0] for r in session.query(NewsItem.ticker).distinct().all()
+            ]
+        return jsonify({
+            "prices_count": prices_count,
+            "news_count": news_count,
+            "news_enriched": news_enriched,
+            "tickers": tickers,
+        })
+
     return app
+
 
 if __name__ == "__main__":
     create_app().run(debug=True, port=5000)
-    
