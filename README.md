@@ -1,9 +1,30 @@
-# FinAPI — Lab 1, Lab 2 & Lab 3
+# FinAPI — Financial Sentiment Analysis Engine
 
-## Description
+> **Python · Flask · FinBERT · SQLite · Hugging Face Transformers**
 
-API REST Python avec Flask pour récupérer des cours boursiers en temps réel,
-avec pipeline ETL, stockage SQLite et analyse de sentiment financier via FinBERT.
+A production-ready REST API that fetches real-time stock prices and financial news,
+stores them in a SQLite database, and enriches them with AI-powered sentiment analysis
+using FinBERT — a Transformer model fine-tuned on 4.9 billion financial tokens.
+
+---
+
+## Author
+
+**Rihem Dardouri**
+Master en Économie et Finance Quantitative
+École Polytechnique de Tunisie
+
+---
+
+## Project Roadmap
+
+| Lab | Theme | Technologies | Status |
+|-----|-------|-------------|--------|
+| Lab 1 | REST API — Real-time stock prices | Flask · yfinance | ✅ Done |
+| Lab 2 | ETL Pipeline — Data storage | SQLAlchemy · SQLite | ✅ Done |
+| Lab 3 | NLP — Financial sentiment analysis | FinBERT · Transformers | ✅ Done |
+
+---
 
 ## Installation
 
@@ -14,81 +35,77 @@ source .venv/Scripts/activate
 pip install -r requirements.txt
 pip install -e .
 
-## Lancer le serveur
+---
 
-python -m finapi.app
-
-## ETL — Ingestion des données
+## Quick Start
 
 python scripts/run_etl.py AAPL MSFT GOOGL
-
-## Enrichissement sentiment (Lab 3)
-
 python scripts/enrich_sentiment.py
+python -m finapi.app
 
-## Migration DB (Lab 3)
+Server runs at http://localhost:5000
 
-Après modification du schéma, supprimer et recréer la base :
+---
+
+## 📡 API Endpoints
+
+### Lab 1 — Real-time Market Data
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /health | Server health check |
+| GET | /price/<ticker> | Latest closing price |
+| GET | /history/<ticker>?days=N | Price history (1–365 days) |
+
+### Lab 2 — Database
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /db/prices/<ticker> | Stored prices from SQLite |
+| GET | /db/news/<ticker> | Stored news from SQLite |
+
+### Lab 3 — FinBERT Sentiment Analysis
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /sentiment | Analyze sentiment of a single text |
+| POST | /sentiment/batch | Analyze up to 100 texts at once |
+| GET | /db/sentiment-summary/<ticker> | Sentiment distribution for a ticker |
+
+---
+
+##  Usage Examples
+
+curl http://localhost:5000/health
+
+curl http://localhost:5000/price/AAPL
+
+curl "http://localhost:5000/history/MSFT?days=5"
+
+curl http://localhost:5000/db/prices/AAPL
+
+curl http://localhost:5000/db/news/AAPL
+
+curl -X POST http://localhost:5000/sentiment -H "Content-Type: application/json" -d "{\"text\": \"Apple stock soared after earnings beat expectations.\"}"
+
+curl -X POST http://localhost:5000/sentiment/batch -H "Content-Type: application/json" -d "{\"texts\": [\"Apple stock soared after blockbuster earnings\", \"Tesla missed estimates, shares plunge\", \"The Fed kept interest rates unchanged\"]}"
+
+curl http://localhost:5000/db/sentiment-summary/AAPL
+
+---
+
+##  Database Migration
 
 python -c "from finapi.db import init_db; init_db()"
 python scripts/run_etl.py AAPL MSFT GOOGL
 python scripts/enrich_sentiment.py
 
-## Endpoints disponibles
+---
 
-### Lab 1
-
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| /health | GET | Vérification du serveur |
-| /price/<ticker> | GET | Dernier prix en temps réel |
-| /history/<ticker>?days=N | GET | Historique des prix (1-365 jours) |
-
-### Lab 2
-
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| /db/prices/<ticker> | GET | Prix stockés en base SQLite |
-| /db/news/<ticker> | GET | News stockées en base SQLite |
-
-### Lab 3
-
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| /sentiment | POST | Analyse le sentiment d'un texte unique |
-| /sentiment/batch | POST | Analyse jusqu'à 100 textes en une requête |
-| /db/sentiment-summary/<ticker> | GET | Résumé des sentiments par ticker |
-
-## Exemples curl
-
-# Santé du serveur
-curl http://localhost:5000/health
-
-# Dernier prix AAPL
-curl http://localhost:5000/price/AAPL
-
-# Historique 5 jours MSFT
-curl "http://localhost:5000/history/MSFT?days=5"
-
-# Prix stockés en base
-curl http://localhost:5000/db/prices/AAPL
-
-# News stockées en base
-curl http://localhost:5000/db/news/AAPL
-
-# Analyse de sentiment (texte unique)
-curl -X POST http://localhost:5000/sentiment -H "Content-Type: application/json" -d "{\"text\": \"Apple stock soared after earnings beat expectations.\"}"
-
-# Analyse de sentiment (batch)
-curl -X POST http://localhost:5000/sentiment/batch -H "Content-Type: application/json" -d "{\"texts\": [\"Apple stock soared\", \"Tesla missed estimates\", \"Fed kept rates unchanged\"]}"
-
-# Résumé sentiment AAPL
-curl http://localhost:5000/db/sentiment-summary/AAPL
-
-## Structure du projet
+##  Project Structure
 
 finapi-lab1/
-├── .venv/
+│
 ├── finapi/
 │   ├── __init__.py
 │   ├── app.py
@@ -100,17 +117,29 @@ finapi-lab1/
 │       ├── __init__.py
 │       ├── prices_etl.py
 │       └── news_etl.py
+│
 ├── scripts/
 │   ├── run_etl.py
 │   └── enrich_sentiment.py
+│
 ├── data/
 │   └── finapi.db
+│
 ├── tests/
 ├── pyproject.toml
-├── .gitignore
 ├── requirements.txt
 └── README.md
 
-## Auteur
+---
 
-Rihem Dardouri — ITBS · Master Finance Quantitative
+## About FinBERT
+
+FinBERT is a BERT model fine-tuned on financial corpora (analyst reports, Reuters, Bloomberg).
+It classifies text into positive, neutral, or negative sentiment with high accuracy
+on financial jargon such as "beat estimates", "guidance raised", or "missed targets".
+
+Model: ProsusAI/finbert on Hugging Face
+
+---
+
+Document pédagogique — ITBS · SMARTLab ISG Tunis
